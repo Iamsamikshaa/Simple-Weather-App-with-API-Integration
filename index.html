@@ -1,65 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Weather App</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather App</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="bg-animation"></div>
+  <main>
+    <div class="container">
+      <h1 class="title">🌦️ Weather App</h1>
 
-  <div class="weather-app">
-    <div class="header">
-      <h1 class="title">🌦 Pro Weather</h1>
-      <p class="date-time" id="dateTime"></p>
-    </div>
+      <form>
+        <input type="text" id="name" placeholder="Enter city name..." />
+        <button type="submit">Search</button>
+      </form>
 
-    <div class="search-section">
-      <div class="search-box">
-        <input type="text" placeholder="Search city..." id="cityInput">
-        <button id="searchBtn"><i data-lucide="search"></i></button>
-      </div>
-      <button id="geoBtn" class="geo-btn"><i data-lucide="map-pin"></i> My Location</button>
-    </div>
+      <section class="weather-info">
+        <figure class="name">
+          <figcaption>--</figcaption>
+          <img src="" alt="country flag">
+        </figure>
 
-    <div class="weather-card">
-      <div class="icon">
-        <i data-lucide="sun"></i>
-      </div>
-      <h1 class="temp" id="temperature">27°C</h1>
-      <button id="unitToggle" class="unit-toggle">°C / °F</button>
-      <h2 class="condition" id="condition">Sunny</h2>
-      <p class="location" id="location">Mumbai, India</p>
-    </div>
+        <div class="temperature">
+          <img src="" alt="weather icon" />
+          <span>--</span><sup>°C</sup>
+        </div>
 
-    <div class="extra-info">
-      <div class="info-box">
-        <i data-lucide="wind"></i>
-        <span id="wind">12 km/h</span>
-      </div>
-      <div class="info-box">
-        <i data-lucide="droplets"></i>
-        <span id="humidity">78%</span>
-      </div>
-      <div class="info-box">
-        <i data-lucide="thermometer"></i>
-        <span id="feelsLike">Feels 30°C</span>
-      </div>
-    </div>
+        <p class="description">--</p>
 
-    <div class="forecast">
-      <h3>Weekly Forecast</h3>
-      <div class="forecast-cards" id="forecastCards">
-        <!-- Cards added with JS -->
-      </div>
+        <div class="details">
+          <div class="detail-box">
+            <h3>Clouds</h3>
+            <p id="clouds">--</p>
+          </div>
+          <div class="detail-box">
+            <h3>Humidity</h3>
+            <p id="humidity">--</p>
+          </div>
+          <div class="detail-box">
+            <h3>Pressure</h3>
+            <p id="pressure">--</p>
+          </div>
+        </div>
+      </section>
     </div>
-  </div>
+  </main>
 
   <script src="script.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
 </body>
 </html>
