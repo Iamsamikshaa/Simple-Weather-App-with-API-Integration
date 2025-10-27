@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather App</title>
+  <title>Premium Weather App</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main>
     <div class="container">
-      <h1 class="title">🌦️ Weather App</h1>
+      <h1 class="title">🌤️ Premium Weather App</h1>
 
+      <!-- Search form -->
       <form>
         <input type="text" id="name" placeholder="Enter city name..." />
         <button type="submit">Search</button>
       </form>
 
+      <!-- Current weather -->
       <section class="weather-info">
         <figure class="name">
           <figcaption>--</figcaption>
@@ -44,9 +46,16 @@
           </div>
         </div>
       </section>
+
+      <!-- 5-day Forecast -->
+      <section class="forecast">
+        <h2>5-Day Forecast</h2>
+        <div class="forecast-grid"></div>
+      </section>
     </div>
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
+
