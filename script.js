@@ -1,93 +1,145 @@
-let apiKey = '9505fd1df737e20152fbd78cdb289b6a';
-let weatherUrl = 'https://api.openweathermap.org/data/2.5/weather?units=metric&appid=' + apiKey;
-let forecastUrl = 'https://api.openweathermap.org/data/2.5/forecast?units=metric&appid=' + apiKey;
+const apiKey = '9505fd1df737e20152fbd78cdb289b6a';
+const weatherURL = 'https://api.openweathermap.org/data/2.5/weather?units=metric&appid=' + apiKey;
+const forecastURL = 'https://api.openweathermap.org/data/2.5/forecast?units=metric&appid=' + apiKey;
 
-let form = document.querySelector("form");
-let valueSearch = document.getElementById("name");
-let city = document.querySelector(".name");
-let temperature = document.querySelector(".temperature");
-let description = document.querySelector(".description");
-let clouds = document.getElementById("clouds");
-let humidity = document.getElementById("humidity");
-let pressure = document.getElementById("pressure");
-let main = document.querySelector("main");
-let forecastGrid = document.querySelector(".forecast-grid");
+const form = document.getElementById('searchForm');
+const cityInput = document.getElementById('cityInput');
+const locationBtn = document.getElementById('locationBtn');
+let chartInstance = null;
 
-// Event listener
-form.addEventListener("submit", (e) => {
+// Elements
+const city = document.querySelector('.name figcaption');
+const flag = document.querySelector('.name img');
+const temp = document.querySelector('.temperature span');
+const icon = document.querySelector('.temperature img');
+const desc = document.querySelector('.description');
+const clouds = document.getElementById('clouds');
+const humidity = document.getElementById('humidity');
+const pressure = document.getElementById('pressure');
+const forecastCanvas = document.getElementById('forecastChart');
+
+// Search by city
+form.addEventListener('submit', e => {
   e.preventDefault();
-  if (valueSearch.value.trim() !== "") {
-    getWeather(valueSearch.value.trim());
+  if(cityInput.value) {
+    getWeather(cityInput.value);
+    getForecast(cityInput.value);
+    cityInput.value = '';
   }
 });
 
-// Fetch current weather
-function getWeather(cityName) {
-  fetch(weatherUrl + "&q=" + cityName)
-    .then(res => res.json())
-    .then(data => {
-      if (data.cod == 200) {
-        city.querySelector("figcaption").innerText = data.name;
-        city.querySelector("img").src = `https://flagsapi.com/${data.sys.country}/shiny/32.png`;
-        temperature.querySelector("img").src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
-        temperature.querySelector("span").innerText = data.main.temp.toFixed(1);
-        description.innerText = data.weather[0].description;
-        clouds.innerText = data.clouds.all;
-        humidity.innerText = data.main.humidity;
-        pressure.innerText = data.main.pressure;
+// Use location
+locationBtn.addEventListener('click', () => {
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude, longitude } = pos.coords;
+      getWeatherByCoords(latitude, longitude);
+      getForecastByCoords(latitude, longitude);
+    }, () => alert("Location access denied"));
+  } else alert("Geolocation not supported");
+});
 
-        getForecast(cityName);
-      } else {
-        showError();
-      }
-    })
-    .catch(showError);
+// Get weather
+function getWeather(cityName){
+  fetch(`${weatherURL}&q=${cityName}`)
+    .then(res => res.json())
+    .then(data => updateWeatherUI(data));
 }
 
-// Fetch 5-day forecast
-function getForecast(cityName) {
-  fetch(forecastUrl + "&q=" + cityName)
+// Get weather by coords
+function getWeatherByCoords(lat, lon){
+  fetch(`${weatherURL}&lat=${lat}&lon=${lon}`)
     .then(res => res.json())
-    .then(data => {
-      if (data.cod == "200") {
-        displayForecast(data);
-      }
-    });
+    .then(data => updateWeatherUI(data));
 }
 
-// Display forecast cards
-function displayForecast(data) {
-  forecastGrid.innerHTML = "";
-  let dailyData = data.list.filter(item => item.dt_txt.includes("12:00:00"));
+// Update UI
+function updateWeatherUI(data){
+  if(data.cod !== 200) return alert("City not found!");
+  city.innerText = data.name;
+  flag.src = `https://flagsapi.com/${data.sys.country}/shiny/32.png`;
+  temp.innerText = data.main.temp.toFixed(1);
+  icon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
+  desc.innerText = data.weather[0].description;
+  clouds.innerText = data.clouds.all + '%';
+  humidity.innerText = data.main.humidity + '%';
+  pressure.innerText = data.main.pressure + ' hPa';
+}
 
-  dailyData.forEach(day => {
-    let date = new Date(day.dt * 1000);
-    let weekday = date.toLocaleDateString("en-US", { weekday: "short" });
-    let icon = day.weather[0].icon;
-    let temp = Math.round(day.main.temp);
-    let desc = day.weather[0].description;
+// Get forecast
+function getForecast(cityName){
+  fetch(`${forecastURL}&q=${cityName}`)
+    .then(res => res.json())
+    .then(data => drawForecastChart(data));
+}
 
-    let card = document.createElement("div");
-    card.classList.add("forecast-day");
-    card.innerHTML = `
-      <h4>${weekday}</h4>
-      <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
-      <p>${temp}°C</p>
-      <small>${desc}</small>
-    `;
-    forecastGrid.appendChild(card);
+// Get forecast by coords
+function getForecastByCoords(lat, lon){
+  fetch(`${forecastURL}&lat=${lat}&lon=${lon}`)
+    .then(res => res.json())
+    .then(data => drawForecastChart(data));
+}
+
+// Draw animated forecast
+function drawForecastChart(data){
+  const labels = [];
+  const temps = [];
+
+  data.list.forEach((item, index) => {
+    if(index % 8 === 0){ // 1 per day
+      const date = new Date(item.dt * 1000);
+      labels.push(date.toLocaleDateString("en-US",{weekday:"short"}));
+      temps.push(item.main.temp);
+    }
+  });
+
+  const ctx = forecastCanvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0,0,0,250);
+  gradient.addColorStop(0,'rgba(255,255,0,0.6)');
+  gradient.addColorStop(1,'rgba(255,0,0,0.2)');
+
+  if(chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Temperature (°C)',
+        data: temps,
+        fill:true,
+        borderColor:'#ffcc00',
+        backgroundColor: gradient,
+        tension:0.4,
+        pointRadius:6,
+        pointBackgroundColor:'#fff',
+        pointHoverRadius:10
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{enabled:true, mode:'index'}
+      },
+      animations:{
+        tension:{
+          duration:2000,
+          easing:'easeInOutQuad',
+          from:0.3,
+          to:0.5,
+          loop:true
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#fff'}},
+        y:{ticks:{color:'#fff'}}
+      }
+    }
   });
 }
 
-// Error animation
-function showError() {
-  main.classList.add("error");
-  setTimeout(() => main.classList.remove("error"), 1000);
-}
-
-// Default city
-function init() {
-  valueSearch.value = "Washington";
-  getWeather("Washington");
-}
-init();
+// Default load
+getWeather('New York');
+getForecast('New York');
