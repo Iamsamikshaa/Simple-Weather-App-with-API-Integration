@@ -1,145 +1,60 @@
-const apiKey = '9505fd1df737e20152fbd78cdb289b6a';
-const weatherURL = 'https://api.openweathermap.org/data/2.5/weather?units=metric&appid=' + apiKey;
-const forecastURL = 'https://api.openweathermap.org/data/2.5/forecast?units=metric&appid=' + apiKey;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Weather App</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main class="container">
+    <h1>🌤️ My Weather App</h1>
 
-const form = document.getElementById('searchForm');
-const cityInput = document.getElementById('cityInput');
-const locationBtn = document.getElementById('locationBtn');
-let chartInstance = null;
+    <form id="searchForm">
+      <input type="text" id="cityInput" placeholder="Enter city name..." />
+      <button type="submit">Search</button>
+    </form>
 
-// Elements
-const city = document.querySelector('.name figcaption');
-const flag = document.querySelector('.name img');
-const temp = document.querySelector('.temperature span');
-const icon = document.querySelector('.temperature img');
-const desc = document.querySelector('.description');
-const clouds = document.getElementById('clouds');
-const humidity = document.getElementById('humidity');
-const pressure = document.getElementById('pressure');
-const forecastCanvas = document.getElementById('forecastChart');
+    <button id="locationBtn">📍 Use My Location</button>
 
-// Search by city
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  if(cityInput.value) {
-    getWeather(cityInput.value);
-    getForecast(cityInput.value);
-    cityInput.value = '';
-  }
-});
+    <section class="weather-info">
+      <figure class="name">
+        <figcaption>--</figcaption>
+        <img src="" alt="Country Flag" />
+      </figure>
 
-// Use location
-locationBtn.addEventListener('click', () => {
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude, longitude } = pos.coords;
-      getWeatherByCoords(latitude, longitude);
-      getForecastByCoords(latitude, longitude);
-    }, () => alert("Location access denied"));
-  } else alert("Geolocation not supported");
-});
+      <div class="temperature">
+        <img src="" alt="Weather Icon" />
+        <span>--</span><sup>°C</sup>
+      </div>
 
-// Get weather
-function getWeather(cityName){
-  fetch(`${weatherURL}&q=${cityName}`)
-    .then(res => res.json())
-    .then(data => updateWeatherUI(data));
-}
+      <p class="description">--</p>
 
-// Get weather by coords
-function getWeatherByCoords(lat, lon){
-  fetch(`${weatherURL}&lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(data => updateWeatherUI(data));
-}
+      <div class="details">
+        <div class="detail-box">
+          <h3>Clouds</h3>
+          <p id="clouds">--</p>
+        </div>
+        <div class="detail-box">
+          <h3>Humidity</h3>
+          <p id="humidity">--</p>
+        </div>
+        <div class="detail-box">
+          <h3>Pressure</h3>
+          <p id="pressure">--</p>
+        </div>
+      </div>
+    </section>
 
-// Update UI
-function updateWeatherUI(data){
-  if(data.cod !== 200) return alert("City not found!");
-  city.innerText = data.name;
-  flag.src = `https://flagsapi.com/${data.sys.country}/shiny/32.png`;
-  temp.innerText = data.main.temp.toFixed(1);
-  icon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
-  desc.innerText = data.weather[0].description;
-  clouds.innerText = data.clouds.all + '%';
-  humidity.innerText = data.main.humidity + '%';
-  pressure.innerText = data.main.pressure + ' hPa';
-}
+    <section class="forecast">
+      <h2>5-Day Forecast</h2>
+      <canvas id="forecastChart"></canvas>
+    </section>
+  </main>
 
-// Get forecast
-function getForecast(cityName){
-  fetch(`${forecastURL}&q=${cityName}`)
-    .then(res => res.json())
-    .then(data => drawForecastChart(data));
-}
+  <script src="script.js"></script>
+</body>
+</html>
 
-// Get forecast by coords
-function getForecastByCoords(lat, lon){
-  fetch(`${forecastURL}&lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(data => drawForecastChart(data));
-}
-
-// Draw animated forecast
-function drawForecastChart(data){
-  const labels = [];
-  const temps = [];
-
-  data.list.forEach((item, index) => {
-    if(index % 8 === 0){ // 1 per day
-      const date = new Date(item.dt * 1000);
-      labels.push(date.toLocaleDateString("en-US",{weekday:"short"}));
-      temps.push(item.main.temp);
-    }
-  });
-
-  const ctx = forecastCanvas.getContext('2d');
-
-  const gradient = ctx.createLinearGradient(0,0,0,250);
-  gradient.addColorStop(0,'rgba(255,255,0,0.6)');
-  gradient.addColorStop(1,'rgba(255,0,0,0.2)');
-
-  if(chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Temperature (°C)',
-        data: temps,
-        fill:true,
-        borderColor:'#ffcc00',
-        backgroundColor: gradient,
-        tension:0.4,
-        pointRadius:6,
-        pointBackgroundColor:'#fff',
-        pointHoverRadius:10
-      }]
-    },
-    options: {
-      responsive:true,
-      plugins:{
-        legend:{display:false},
-        tooltip:{enabled:true, mode:'index'}
-      },
-      animations:{
-        tension:{
-          duration:2000,
-          easing:'easeInOutQuad',
-          from:0.3,
-          to:0.5,
-          loop:true
-        }
-      },
-      scales:{
-        x:{ticks:{color:'#fff'}},
-        y:{ticks:{color:'#fff'}}
-      }
-    }
-  });
-}
-
-// Default load
-getWeather('New York');
-getForecast('New York');
